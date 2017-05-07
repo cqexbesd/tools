@@ -480,12 +480,22 @@ private int rebuild(string root, string fullExe,
         }
     }
 
-    auto fullExeTemp = fullExe ~ ".tmp";
+    string exeOutputName;
+    version (Windows)
+    {
+        // Windows locks running binaries and that might prevent us from
+        // overwriting the binary.
+        exeOutputName = fullExe ~ ".tmp";
+    }
+    else
+    {
+        exeOutputName = fullExe;
+    }
 
     string[] buildTodo()
     {
         auto todo = compilerFlags
-            ~ [ "-of" ~ fullExeTemp ]
+            ~ [ "-of" ~ exeOutputName ]
             ~ [ "-od" ~ objDir ]
             ~ [ "-I" ~ dirName(root) ]
             ~ [ root ];
@@ -523,8 +533,8 @@ private int rebuild(string root, string fullExe,
     if (result)
     {
         // build failed
-        if (exists(fullExeTemp))
-            remove(fullExeTemp);
+        if (exists(exeOutputName))
+            remove(exeOutputName);
         return result;
     }
     // clean up the dir containing the object file, just not in dry
@@ -540,8 +550,13 @@ private int rebuild(string root, string fullExe,
             // directory. One will fail.
             collectException(rmdirRecurse(objDir));
         }
-        yap("mv ", fullExeTemp, " ", fullExe);
-        rename(fullExeTemp, fullExe);
+        // if we output to a temporary name we need to rename it to the
+        // correct name
+        if (exeOutputName != fullExe)
+        {
+            yap("mv ", exeOutputName, " ", fullExe);
+            rename(exeOutputName, fullExe);
+        }
     }
     return 0;
 }

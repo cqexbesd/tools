@@ -480,12 +480,10 @@ private int rebuild(string root, string fullExe,
         }
     }
 
-    auto fullExeTemp = fullExe ~ ".tmp";
-
     string[] buildTodo()
     {
         auto todo = compilerFlags
-            ~ [ "-of" ~ fullExeTemp ]
+            ~ [ "-of" ~ fullExe ]
             ~ [ "-od" ~ objDir ]
             ~ [ "-I" ~ dirName(root) ]
             ~ [ root ];
@@ -523,8 +521,8 @@ private int rebuild(string root, string fullExe,
     if (result)
     {
         // build failed
-        if (exists(fullExeTemp))
-            remove(fullExeTemp);
+        if (exists(fullExe))
+            remove(fullExe);
         return result;
     }
     // clean up the dir containing the object file, just not in dry
@@ -540,8 +538,6 @@ private int rebuild(string root, string fullExe,
             // directory. One will fail.
             collectException(rmdirRecurse(objDir));
         }
-        yap("mv ", fullExeTemp, " ", fullExe);
-        rename(fullExeTemp, fullExe);
     }
     return 0;
 }
